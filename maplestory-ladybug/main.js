@@ -1,0 +1,267 @@
+// 캔버스 설정
+let canvas = document.createElement("canvas");
+let ctx = canvas.getContext("2d");
+canvas.width = 1006;
+canvas.height = 624;
+document.body.appendChild(canvas);
+
+// 이미지 로드
+let backgroundImg, spaceshipImg, gameoverImg;
+let enemyImg1, enemyImg2, enemyImg3, enemyImg4;
+function loadImage() {
+    backgroundImg = new Image();
+    backgroundImg.src = "./img/background.png";
+
+    spaceshipImg = new Image();
+    spaceshipImg.src = "./img/character.jpg";
+
+
+
+    enemyImg1 = new Image();
+    enemyImg1.src = "./img/enemy1.gif";
+
+    enemyImg2 = new Image();
+    enemyImg2.src = "./img/enemy2.gif";
+
+    enemyImg3 = new Image();
+    enemyImg3.src = "./img/enemy3.gif";
+
+    enemyImg4 = new Image();
+    enemyImg4.src = "./img/enemy4.gif";
+
+    gameoverImg = new Image();
+    gameoverImg.src = "./img/fail.png";
+
+    skil1 = new Image();
+    skil1.src = "./img/skil1.gif";
+
+    skil2 = new Image();
+    skil2.src = "./img/skil2.gif";
+
+    skil3 = new Image();
+    skil3.src = "./img/skil3.gif";
+
+}
+
+// 게임 상태 변수
+let spaceshipX = canvas.width / 2 - 20;
+let spaceshipY = canvas.height - 40;
+let gameOver = false;
+let score = 0;
+
+// 총알 관련 변수 및 함수
+
+
+// 적 관련 변수 및 함수
+let enemyList = [];
+function enemy() {
+    this.x = 0;
+    this.y = 0;
+    this.img = null;
+
+    this.init = function () {
+        let minX = Math.max(spaceshipX - 100, 0);
+        let maxX = Math.min(spaceshipX + 100, canvas.width - 60);
+        this.x = RandomValue(minX, maxX); // 수정된 X 좌표 범위
+        this.y = -60; // 화면 위에서 시작
+
+        let randomImg = RandomValue(1, 4);
+        switch (randomImg) {
+            case 1:
+                this.img = enemyImg1;
+                break;
+            case 2:
+                this.img = enemyImg2;
+                break;
+            case 3:
+                this.img = enemyImg3;
+                break;
+            case 4:
+                this.img = enemyImg4;
+                break;
+        }
+
+        enemyList.push(this);
+    };
+    this.update = function () {
+        this.y += 1;
+        if (this.x < spaceshipX + 40 && this.x + 30 > spaceshipX && this.y < spaceshipY + 40 && this.y + 30 > spaceshipY) {
+            gameOver = true;
+        }
+    };
+}
+
+function createEnemy() {
+    setInterval(function () {
+        let proximityToCenter = Math.abs(spaceshipX - canvas.width / 2);
+        let spawnRate = Math.max(300, 500 - proximityToCenter);
+
+        let e = new enemy();
+        e.init();
+    }, 500);
+}
+// 키보드 이벤트 리스너 설정
+let keysDown = {};
+function setupKeyboard() {
+    document.addEventListener("keydown", function (event) {
+        keysDown[event.key] = true;
+    });
+    document.addEventListener("keyup", function (event) {
+        delete keysDown[event.key];
+
+    });
+}
+function Blade() {
+    this.x = 0;
+    this.y = 0;
+    this.active = false;
+    this.activationTime = 0;
+
+    this.activate = function() {
+        this.x = spaceshipX;
+        this.y = spaceshipY;
+        this.active = true;
+        this.activationTime = Date.now();
+    };
+
+    this.update = function() {
+        if (this.active) {
+            // 현재 시간과 활성화 시간 비교
+            if (Date.now() - this.activationTime > 3000) {
+                this.active = false; // 3초 후 비활성화
+                
+            }
+
+            // 캐릭터 위치를 부드럽게 따라가도록 업데이트
+            this.x += (spaceshipX - this.x) * 0.1; // 0.1은 이동 속도 계수
+            this.y += (spaceshipY - this.y) * 0.1;
+
+            // 플레이어 주변의 적 제거
+            enemyList = enemyList.filter(enemy => {
+                let distance = Math.sqrt(Math.pow(enemy.x - this.x, 2) + Math.pow(enemy.y - this.y, 2));
+                return distance > 90; 
+            });
+
+            // blade 이미지 렌더링 (스킬 활성화 시)
+            if (this.active) {
+                ctx.drawImage(skil1, this.x - 42, this.y - 30, 150, 150); // 이미지 크기 및 위치 조정 필요
+            }
+        }
+    };
+}
+
+let bladeSkill = new Blade();
+
+
+// 칼날 생성 및 업데이트
+function activateBlade() {
+    bladeSkill.activate();
+}
+
+// function leaf(x, y) {
+//     this.x = x;
+//     this.y = y;
+//     this.update = function() {
+//         // 나뭇잎 위치 업데이트
+//     };
+//     this.checkHit = function() {
+//         // 적과의 충돌 검사
+//     };
+// }
+
+// function throwLeaf(x, y) {
+//     let l = new leaf(x, y);
+//     l.update();
+//     bulletList.push(l);
+// }
+
+
+// function bee() {
+//     this.x = RandomValue(0, canvas.width - beeWidth);
+//     this.y = canvas.height;
+//     this.update = function() {
+//         this.y -= beeSpeed; // 벌이 위로 올라감
+//     };
+//     this.checkHit = function() {
+//         // 적과의 충돌 검사
+//     };
+// }
+
+// function createBee() {
+//     let b = new bee();
+//     b.update();
+//     enemyList.push(b);
+// }
+
+
+
+
+// 게임 업데이트 함수
+function update() {
+    if ("ArrowRight" in keysDown) {
+        spaceshipX += 3;
+        spaceshipX = Math.min(spaceshipX, canvas.width - 40);
+    }
+    if ("ArrowLeft" in keysDown) {
+        spaceshipX -= 3;
+        spaceshipX = Math.max(spaceshipX, 0);
+    }
+    if ("ArrowUp" in keysDown) {
+        spaceshipY -= 3;
+        spaceshipY = Math.max(spaceshipY, 0);
+    }
+    if ("ArrowDown" in keysDown) {
+        spaceshipY += 3;
+        spaceshipY = Math.min(spaceshipY, canvas.height - 40);
+    }
+
+
+    enemyList.forEach(e => e.update());
+}
+
+// 게임 렌더링 함수
+function render() {
+    ctx.globalAlpha = 0.5;
+    ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1.0;
+    bladeSkill.update();
+
+    ctx.drawImage(spaceshipImg, spaceshipX, spaceshipY, 60, 60);
+    ctx.fillStyle = "white";
+    ctx.font = "24px Arial";
+    ctx.fillText(`score: ${score}`, 20, 20);
+
+
+
+
+    enemyList.forEach(e => {
+        ctx.drawImage(e.img, e.x, e.y, 60, 60);
+    });
+}
+
+// 주 게임 루프 함수
+function main() {
+    if (!gameOver) {
+        update();
+        render();
+        requestAnimationFrame(main);
+        if (Math.random() < 0.01) { 
+            activateBlade();
+        }
+    } else {
+        ctx.drawImage(gameoverImg, 310, 100, 400, 400);
+    }
+}
+    
+// 게임 초기화 및 실행
+loadImage();
+setupKeyboard();
+createEnemy();
+render();
+main();
+
+// 유틸리티 함수
+function RandomValue(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+    

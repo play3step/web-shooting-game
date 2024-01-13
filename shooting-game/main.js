@@ -79,19 +79,19 @@ function createEnemy() {
 
 function loadImage() {
     backgroundImg = new Image();
-    backgroundImg.src = "/img/background.gif"
+    backgroundImg.src = "./img/background.gif"
 
     spaceshipImg = new Image();
-    spaceshipImg.src = "/img/spaceship.png"
+    spaceshipImg.src = "./img/spaceship.png"
 
     bulletImg = new Image();
-    bulletImg.src = "/img/bullet.png"
+    bulletImg.src = "./img/bullet.png"
 
     enemyImg = new Image();
-    enemyImg.src = "/img/enemy.png"
+    enemyImg.src = "./img/enemy.png"
 
     gameoverImg = new Image();
-    gameoverImg.src = "/img/gameover.png"
+    gameoverImg.src = "./img/gameover.png"
 }
 
 let keysDown = {}
