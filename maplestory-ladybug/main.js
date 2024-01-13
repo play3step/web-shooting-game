@@ -5,6 +5,18 @@ canvas.width = 1006;
 canvas.height = 624;
 document.body.appendChild(canvas);
 
+// 게임 상태 변수
+let spaceshipX = canvas.width / 2 - 20;
+let spaceshipY = canvas.height - 40;
+let gameOver = false;
+let startTime = Date.now(); // 게임 시작 시간 저장
+
+let restartButton = null;
+let buttonClicked = false;
+// 총 버틴 시간 변수
+let totalElapsedTime = 0;
+
+
 // 이미지 로드
 let backgroundImg, spaceshipImg, gameoverImg;
 let enemyImg1, enemyImg2, enemyImg3, enemyImg4;
@@ -14,8 +26,6 @@ function loadImage() {
 
     spaceshipImg = new Image();
     spaceshipImg.src = "./img/character.jpg";
-
-
 
     enemyImg1 = new Image();
     enemyImg1.src = "./img/enemy1.gif";
@@ -40,19 +50,8 @@ function loadImage() {
 
     skil3 = new Image();
     skil3.src = "./img/skil3.gif";
-
 }
 
-// 게임 상태 변수
-let spaceshipX = canvas.width / 2 - 20;
-let spaceshipY = canvas.height - 40;
-let gameOver = false;
-let score = 0;
-
-// 총알 관련 변수 및 함수
-
-
-// 적 관련 변수 및 함수
 let enemyList = [];
 function enemy() {
     this.x = 0;
@@ -100,7 +99,8 @@ function createEnemy() {
         e.init();
     }, 500);
 }
-// 키보드 이벤트 리스너 설정
+
+
 let keysDown = {};
 function setupKeyboard() {
     document.addEventListener("keydown", function (event) {
@@ -108,7 +108,6 @@ function setupKeyboard() {
     });
     document.addEventListener("keyup", function (event) {
         delete keysDown[event.key];
-
     });
 }
 
@@ -118,19 +117,18 @@ function Blade() {
     this.active = false;
     this.activationTime = 0;
 
-    this.activate = function() {
+    this.activate = function () {
         this.x = spaceshipX;
         this.y = spaceshipY;
         this.active = true;
         this.activationTime = Date.now();
     };
 
-    this.update = function() {
+    this.update = function () {
         if (this.active) {
             // 현재 시간과 활성화 시간 비교
             if (Date.now() - this.activationTime > 3000) {
                 this.active = false; // 3초 후 비활성화
-                
             }
 
             // 캐릭터 위치를 부드럽게 따라가도록 업데이트
@@ -138,9 +136,9 @@ function Blade() {
             this.y += (spaceshipY - this.y) * 0.1;
 
             // 플레이어 주변의 적 제거
-            enemyList = enemyList.filter(enemy => {
+            enemyList = enemyList.filter((enemy) => {
                 let distance = Math.sqrt(Math.pow(enemy.x - this.x, 2) + Math.pow(enemy.y - this.y, 2));
-                return distance > 90; 
+                return distance > 90;
             });
 
             // blade 이미지 렌더링 (스킬 활성화 시)
@@ -153,39 +151,35 @@ function Blade() {
 
 let bladeSkill = new Blade();
 
-
 // 칼날 생성 및 업데이트
 function activateBlade() {
     bladeSkill.activate();
 }
 
-
 let shipList = [];
 
 function Ship() {
-    let skil3Y = canvas.height; 
+    let skil3Y = canvas.height;
     let skil3X = spaceshipX;
-    this.active = false; 
+    this.active = false;
 
-    this.activate = function() {
+    this.activate = function () {
         this.active = true;
-        skil3Y = canvas.height; 
+        skil3Y = canvas.height;
         skil3X = spaceshipX + 15;
     };
 
-    this.update = function() {
+    this.update = function () {
         if (this.active) {
-
             skil3Y -= 5;
-
 
             if (skil3Y <= 0) {
                 this.active = false;
             }
 
-            enemyList = enemyList.filter(enemy => {
+            enemyList = enemyList.filter((enemy) => {
                 let distance = Math.sqrt(Math.pow(enemy.x - skil3X, 2) + Math.pow(enemy.y - skil3Y, 2));
-                return distance > 90; 
+                return distance > 90;
             });
 
             // blade 이미지 렌더링 (스킬 활성화 시)
@@ -197,6 +191,7 @@ function Ship() {
 }
 
 let ShipSkill = new Ship();
+
 function activateShip() {
     let newShip = new Ship(); // 새로운 배(ship) 생성
     newShip.activate(); // 배(ship) 활성화
@@ -221,8 +216,15 @@ function update() {
         spaceshipY = Math.min(spaceshipY, canvas.height - 40);
     }
 
+    enemyList.forEach((e) => e.update());
+    bladeSkill.update();
+    ShipSkill.update();
 
-    enemyList.forEach(e => e.update());
+    // 현재 시간 계산
+    let currentTime = Date.now();
+    // 경과 시간(초) 계산
+    let elapsedTime = Math.floor((currentTime - startTime) / 1000);
+    totalElapsedTime = elapsedTime; // 총 버틴 시간 업데이트
 }
 
 // 게임 렌더링 함수
@@ -234,18 +236,22 @@ function render() {
     ShipSkill.update();
 
     ctx.drawImage(spaceshipImg, spaceshipX, spaceshipY, 60, 60);
-    ctx.fillStyle = "white";
-    ctx.font = "24px Arial";
-    ctx.fillText(`score: ${score}`, 20, 20);
 
-
-
-    shipList.forEach(ship => {
+    shipList.forEach((ship) => {
         ship.update();
     });
-    enemyList.forEach(e => {
+    enemyList.forEach((e) => {
         ctx.drawImage(e.img, e.x, e.y, 60, 60);
     });
+
+
+    ctx.fillStyle = "white";
+    ctx.font = "24px Arial";
+    ctx.fillText(`Time: ${totalElapsedTime} seconds`, 20, 50);
+
+    if (gameOver) {
+        ctx.drawImage(gameoverImg, 310, 100, 400, 400);
+    }
 }
 
 // 주 게임 루프 함수
@@ -254,17 +260,17 @@ function main() {
         update();
         render();
         requestAnimationFrame(main);
-        if (Math.random() < 0.01) { 
+        if (Math.random() < 0.001) {
             activateBlade();
         }
-        if (Math.random() < 0.01) { 
+        if (Math.random() < 0.001) {
             activateShip();
         }
     } else {
         ctx.drawImage(gameoverImg, 310, 100, 400, 400);
     }
 }
-    
+
 // 게임 초기화 및 실행
 loadImage();
 setupKeyboard();
@@ -276,4 +282,3 @@ main();
 function RandomValue(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-    

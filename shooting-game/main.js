@@ -36,7 +36,6 @@ function bullet() {
                 this.alive = false;
                 enemyList.splice(i, 1);
             }
-
         }
     }
 }
