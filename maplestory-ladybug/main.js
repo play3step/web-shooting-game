@@ -111,6 +111,7 @@ function setupKeyboard() {
 
     });
 }
+
 function Blade() {
     this.x = 0;
     this.y = 0;
@@ -158,45 +159,50 @@ function activateBlade() {
     bladeSkill.activate();
 }
 
-// function leaf(x, y) {
-//     this.x = x;
-//     this.y = y;
-//     this.update = function() {
-//         // 나뭇잎 위치 업데이트
-//     };
-//     this.checkHit = function() {
-//         // 적과의 충돌 검사
-//     };
-// }
 
-// function throwLeaf(x, y) {
-//     let l = new leaf(x, y);
-//     l.update();
-//     bulletList.push(l);
-// }
+let shipList = [];
 
+function Ship() {
+    let skil3Y = canvas.height; 
+    let skil3X = spaceshipX;
+    this.active = false; 
 
-// function bee() {
-//     this.x = RandomValue(0, canvas.width - beeWidth);
-//     this.y = canvas.height;
-//     this.update = function() {
-//         this.y -= beeSpeed; // 벌이 위로 올라감
-//     };
-//     this.checkHit = function() {
-//         // 적과의 충돌 검사
-//     };
-// }
+    this.activate = function() {
+        this.active = true;
+        skil3Y = canvas.height; 
+        skil3X = spaceshipX + 15;
+    };
 
-// function createBee() {
-//     let b = new bee();
-//     b.update();
-//     enemyList.push(b);
-// }
+    this.update = function() {
+        if (this.active) {
+
+            skil3Y -= 5;
 
 
+            if (skil3Y <= 0) {
+                this.active = false;
+            }
 
+            enemyList = enemyList.filter(enemy => {
+                let distance = Math.sqrt(Math.pow(enemy.x - skil3X, 2) + Math.pow(enemy.y - skil3Y, 2));
+                return distance > 90; 
+            });
 
-// 게임 업데이트 함수
+            // blade 이미지 렌더링 (스킬 활성화 시)
+            if (this.active) {
+                ctx.drawImage(skil3, skil3X, skil3Y, 150, 150); // 이미지 크기 및 위치 조정 필요
+            }
+        }
+    };
+}
+
+let ShipSkill = new Ship();
+function activateShip() {
+    let newShip = new Ship(); // 새로운 배(ship) 생성
+    newShip.activate(); // 배(ship) 활성화
+    shipList.push(newShip); // shipList 배열에 배(ship) 추가
+}
+
 function update() {
     if ("ArrowRight" in keysDown) {
         spaceshipX += 3;
@@ -225,6 +231,7 @@ function render() {
     ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
     ctx.globalAlpha = 1.0;
     bladeSkill.update();
+    ShipSkill.update();
 
     ctx.drawImage(spaceshipImg, spaceshipX, spaceshipY, 60, 60);
     ctx.fillStyle = "white";
@@ -233,7 +240,9 @@ function render() {
 
 
 
-
+    shipList.forEach(ship => {
+        ship.update();
+    });
     enemyList.forEach(e => {
         ctx.drawImage(e.img, e.x, e.y, 60, 60);
     });
@@ -247,6 +256,9 @@ function main() {
         requestAnimationFrame(main);
         if (Math.random() < 0.01) { 
             activateBlade();
+        }
+        if (Math.random() < 0.01) { 
+            activateShip();
         }
     } else {
         ctx.drawImage(gameoverImg, 310, 100, 400, 400);
