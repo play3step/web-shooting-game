@@ -11,8 +11,6 @@ let spaceshipY = canvas.height - 40;
 let gameOver = false;
 let startTime = Date.now(); // 게임 시작 시간 저장
 
-let restartButton = null;
-let buttonClicked = false;
 // 총 버틴 시간 변수
 let totalElapsedTime = 0;
 
@@ -127,7 +125,7 @@ function Blade() {
     this.update = function () {
         if (this.active) {
             // 현재 시간과 활성화 시간 비교
-            if (Date.now() - this.activationTime > 3000) {
+            if (Date.now() - this.activationTime > 2000) {
                 this.active = false; // 3초 후 비활성화
             }
 
@@ -247,18 +245,54 @@ function render() {
 
     ctx.fillStyle = "white";
     ctx.font = "24px Arial";
-    ctx.fillText(`Time: ${totalElapsedTime} seconds`, 20, 50);
+    ctx.fillText(`총 시간: ${totalElapsedTime} 초`, 20, 50);
 
     if (gameOver) {
         ctx.drawImage(gameoverImg, 310, 100, 400, 400);
     }
 }
 
+function addRestartButton() {
+    restartButton = document.createElement("button");
+    restartButton.textContent = "다시하기";
+    restartButton.style.position = "absolute";
+    restartButton.style.left = "22%";
+    restartButton.style.top = "36%";
+    restartButton.style.transform = "translateX(-50%)";
+    restartButton.style.padding = "10px 20px";
+    restartButton.style.fontSize = "20px";
+    restartButton.style.backgroundColor = "#6CB7F8";
+    restartButton.style.color = "white";
+    restartButton.style.border = "none";
+    restartButton.style.cursor = "pointer";
+    document.body.appendChild(restartButton);
+
+    restartButton.addEventListener("click", function () {
+        restartButton.style.display = "none"; // 버튼 숨김
+        gameOver = false;
+        spaceshipX = canvas.width / 2 - 20;
+        spaceshipY = canvas.height - 40;
+        enemyList = [];
+        shipList = [];
+        totalElapsedTime = 0;
+        startTime = Date.now();
+        createEnemy();
+        main();
+    });
+}
+
+
+function initGame() {
+    setupKeyboard();
+    createEnemy();
+    main();
+}
 // 주 게임 루프 함수
 function main() {
     if (!gameOver) {
         update();
         render();
+
         requestAnimationFrame(main);
         if (Math.random() < 0.001) {
             activateBlade();
@@ -268,6 +302,7 @@ function main() {
         }
     } else {
         ctx.drawImage(gameoverImg, 310, 100, 400, 400);
+        addRestartButton();
     }
 }
 
